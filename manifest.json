@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "Gemini Notebook Collection Tags",
+  "version": "0.2.0",
+  "permissions": ["storage"],
+  "description": "Show native collection memberships on notebook cards and quickly assign uncollected notebooks.",
+  "content_scripts": [{
+    "matches": ["https://notebook.google.com/*", "https://notebooklm.google.com/*"],
+    "js": ["content.js"],
+    "css": ["content.css"],
+    "run_at": "document_idle"
+  }]
+}

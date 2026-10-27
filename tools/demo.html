@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Collection tags — local demo</title>
+<link rel="stylesheet" href="../content.css">
+<style>
+body { font: 15px system-ui; background: #f8f9fc; color: #202124; margin: 32px; }
+nav { display: flex; gap: 12px; margin: 24px 0; }
+button { font: inherit; padding: 8px 12px; cursor: pointer; }
+.project-grid-container { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 16px; }
+mat-card { display: block; background: white; border: 1px solid #ddd; border-radius: 18px; padding: 20px; }
+mat-card > a { display: block; color: #202124; text-decoration: none; font-size: 19px; font-weight: 600; margin: 16px 0; }
+collection-button { display: block; padding: 20px; background: white; margin: 16px 0; cursor: pointer; }
+add-to-collection-dialog { display: contents; }
+add-to-collection-dialog > .dialog-container { position: fixed; z-index: 1000; inset: 18% 25%; background: white; padding: 24px; border: 1px solid #aaa; border-radius: 24px; box-shadow: 0 0 0 100vmax #0005; }
+[role="option"] { padding: 12px; cursor: pointer; border-radius: 8px; margin: 5px 0; background: #f5f5f5; }
+[aria-selected="true"] { background: #d4e2ff; }
+</style>
+<h1>Notebook collection tags</h1>
+<p>Local demo · sample notebooks · assignments stay in this page</p>
+<button aria-label="Google Account: Sample User (sample@example.invalid)">Sample account</button>
+<nav></nav>
+<main></main>
+<script>
+// Sample-only adapter so the plain webpage can exercise extension caching.
+globalThis.chrome ||= {};
+chrome.storage = {local: {
+  async get(key) { const saved=localStorage.getItem('nct-demo:'+key); return saved?{[key]:JSON.parse(saved)}:{}; },
+  async set(values) { for(const [key,value] of Object.entries(values))localStorage.setItem('nct-demo:'+key,JSON.stringify(value)); }
+}};
+const notebooks = [
+  {id:'alpha', title:'Design notes', collections:['Work','Learning']},
+  {id:'beta', title:'Reading list', collections:['Learning']},
+  {id:'loose', title:'Fresh ideas', collections:[]}
+];
+const collections = ['Work','Learning'];
+const gridView = new URLSearchParams(location.search).get('view') === 'grid';
+const main = document.querySelector('main');
+let mode = 'My notebooks';
+function el(tag, value, parent) { const e=document.createElement(tag); if(value)e.textContent=value; parent?.append(e); return e; }
+function render() {
+  const nav=document.querySelector('nav'); nav.replaceChildren();
+  const trigger=el('button','',nav); trigger.setAttribute('aria-haspopup','menu');
+  const icon=el('mat-icon','arrow_drop_down',trigger); icon.setAttribute('aria-hidden','true');
+  el('span',collections.includes(mode)?'Collections':mode,trigger);
+  trigger.onclick=()=>{
+    const menu=el('div','',document.body); menu.setAttribute('role','menu');
+    for(const name of ['All','My notebooks','Collections']) {
+      const item=el('button',name,menu); item.setAttribute('role','menuitemradio');
+      item.onclick=()=>{menu.remove();mode=name;render()};
+    }
+  };
+  main.replaceChildren();
+  if(mode==='Collections') {
+    el('h2','My collections',main);
+    if(gridView) {
+      for(const name of collections) {
+        const host=el('collection-button','',main);
+        const card=el('mat-card','',host);
+        const action=el('button','Open collection',card); action.className='primary-action-button';
+        const title=el('span',name,card); title.id='collection-'+name+'-title';
+        el('p',notebooks.filter(n=>n.collections.includes(name)).length+' notebooks',card);
+        action.onclick=()=>{mode=name;render()};
+      }
+      return;
+    }
+    const table=el('table','',main);
+    for(const name of collections) {
+      const row=el('tr','',table); row.className='collection-row';
+      const cell=el('td','',row); cell.className='name-cell';
+      const title=el('span',name,cell); title.className='collection-name';
+      const count=el('td',notebooks.filter(n=>n.collections.includes(name)).length+' notebooks',row); count.className='count-cell';
+      row.onclick=()=>{ mode=name; render(); };
+    }
+    return;
+  }
+  let root=main;
+  const expanded=collections.includes(mode);
+  if(expanded) {
+    root=el('div','',main); root.className='collection-expanded-section';
+    const back=el('button','Back to collections',root); back.onclick=()=>{mode='Collections'; render()};
+    const heading=el('h3','',root);
+    const emoji=el('span','',heading); emoji.className='collection-emoji';
+    const category=el('mat-icon','category',emoji); category.setAttribute('aria-hidden','true');
+    el('span',mode,heading);
+  } else el('h2',mode,root);
+  const grid=el(gridView?'div':'table','',root);
+  if(gridView)grid.className='project-grid-container';
+  for(const notebook of notebooks.filter(n=>!expanded||n.collections.includes(mode))) {
+    const card=el(gridView?'mat-card':'tr','',grid);
+    const titleCell=gridView?card:el('td','',card);
+    const actionCell=gridView?card:el('td','',card);
+    const action=el('button','⋮',actionCell); action.setAttribute('aria-label','Project Actions Menu');
+    action.onclick=()=>{
+      const menu=el('div','',document.body); menu.setAttribute('role','menu');
+      const add=el('button','Add to collection',menu); add.setAttribute('role','menuitem');
+      add.onclick=()=>{menu.remove(); picker(notebook)};
+    };
+    const a=el('a',notebook.title,titleCell); a.href='/notebook/'+notebook.id;
+  }
+}
+function picker(notebook) {
+  const root=el('add-to-collection-dialog','',document.body); root.setAttribute('aria-modal','true');
+  const panel=el('div','',root); panel.className='dialog-container';
+  el('h2','Add to collection',panel); el('p',notebook.title,panel);
+  const header=el('div','Select collections',panel); header.className='collections-selection-header';
+  const list=el('div','',panel); list.setAttribute('role','listbox');
+  // Deliberately load options after the listbox shell appears.
+  setTimeout(()=>{
+    for(const name of collections) {
+      const option=el('div','',list); option.setAttribute('role','option');
+      option.setAttribute('aria-selected',String(notebook.collections.includes(name)));
+      el('span',name,option).className='collection-name';
+      option.onclick=()=>option.setAttribute('aria-selected',String(option.getAttribute('aria-selected')!=='true'));
+    }
+  },800);
+  const cancel=el('button','Cancel',panel); cancel.onclick=()=>root.remove();
+  const save=el('button','Save',panel); save.onclick=()=>{
+    notebook.collections=[...list.querySelectorAll('[aria-selected="true"]')].map(o=>o.textContent);
+    root.remove();
+  };
+}
+render();
+</script>
+<script src="../content.js"></script>
+</html>
