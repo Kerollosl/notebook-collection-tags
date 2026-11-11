@@ -1,11 +1,19 @@
 {
   "manifest_version": 3,
-  "name": "Gemini Notebook Collection Tags",
-  "version": "0.2.0",
+  "name": "Collection Tags for NotebookLM",
+  "version": "1.0.0",
+  "description": "Shows which collections each NotebookLM notebook belongs to, right on the notebook cards. Unofficial; not affiliated with Google.",
+  "minimum_chrome_version": "109",
+  "author": "Kerollos Lowandy",
+  "homepage_url": "https://github.com/Kerollosl/notebook-collection-tags",
+  "icons": {"16": "icons/icon16.png", "48": "icons/icon48.png", "128": "icons/icon128.png"},
+  "action": {
+    "default_title": "Collection Tags for NotebookLM",
+    "default_icon": {"16": "icons/icon16.png", "48": "icons/icon48.png"}
+  },
   "permissions": ["storage"],
-  "description": "Show native collection memberships on notebook cards and quickly assign uncollected notebooks.",
   "content_scripts": [{
-    "matches": ["https://notebook.google.com/*", "https://notebooklm.google.com/*"],
+    "matches": ["https://notebook.google.com/*"],
     "js": ["content.js"],
     "css": ["content.css"],
     "run_at": "document_idle"

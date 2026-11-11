@@ -1,29 +1,57 @@
+/* Toolbar: a pill button that sits in the same row as NotebookLM's "New notebook" button. Size, font and
+   colours come from CSS variables that content.js reads from the native button and page, so it matches the
+   theme; the fallbacks below apply only when those could not be read. */
 .nct-toolbar {
-  position: fixed; bottom: 20px; right: 20px; z-index: 900;
-  display: flex; align-items: center; gap: 12px; max-width: min(620px, calc(100vw - 40px));
-  padding: 10px 14px; border: 1px solid #dadce0; border-radius: 16px;
-  background: #fff; color: #303134; box-shadow: 0 3px 16px #0002;
-  font: 13px/1.4 system-ui, sans-serif;
+  position: relative; display: inline-flex; align-items: center; flex: 0 0 auto; margin: 0;
+  font: 13px/1.4 system-ui, sans-serif; color: var(--nct-ink, #303134);
 }
-.nct-toolbar span { flex: 1; }
-.nct-toolbar button, .nct-tags button {
+.nct-toolbar.nct-floating { position: fixed; bottom: 20px; right: 20px; z-index: 900; margin: 0; }
+.nct-toolbar .nct-toggle {
+  display: inline-flex; align-items: center; gap: 8px; box-sizing: border-box;
+  height: var(--nct-h, 36px); padding: 0 16px 0 12px; border-radius: 9999px;
+  border: 1px solid color-mix(in srgb, var(--nct-ink, currentColor) 28%, transparent);
+  background: transparent; color: var(--nct-ink, inherit); cursor: pointer;
+  font-family: var(--nct-font-family, inherit); font-size: var(--nct-font-size, 14px);
+  font-weight: var(--nct-font-weight, 500); letter-spacing: var(--nct-letter-spacing, normal); line-height: 1;
+  transition: background-color .15s;
+}
+.nct-toolbar .nct-toggle:hover { background: color-mix(in srgb, var(--nct-ink, currentColor) 8%, transparent); }
+.nct-toolbar .nct-toggle[aria-expanded="true"] { background: color-mix(in srgb, var(--nct-ink, currentColor) 14%, transparent); }
+.nct-toolbar .nct-toggle:focus-visible { outline: 2px solid var(--nct-ink, #1967d2); outline-offset: 2px; }
+.nct-toolbar .nct-icon { flex: none; }
+.nct-toggle.nct-busy { animation: nct-pulse 1.2s ease-in-out infinite; }
+@keyframes nct-pulse { 50% { opacity: .55; } }
+@media (prefers-reduced-motion: reduce) { .nct-toggle.nct-busy { animation: none; } }
+.nct-panel {
+  position: absolute; top: calc(100% + 8px); right: 0; z-index: 900; width: max-content; max-width: min(420px, calc(100vw - 40px));
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px 12px;
+  padding: 10px 14px; border: 1px solid color-mix(in srgb, var(--nct-ink, #303134) 22%, transparent); border-radius: 16px;
+  background: var(--nct-surface, #fff); color: var(--nct-ink, #303134); box-shadow: 0 3px 16px #0003;
+}
+.nct-toolbar.nct-floating .nct-panel { top: auto; bottom: calc(100% + 8px); }
+.nct-panel[hidden] { display: none; }
+.nct-panel span { flex: 1 1 100%; }
+.nct-panel button, .nct-tags button {
   cursor: pointer; font: inherit; border: 1px solid #c5d5ef;
   border-radius: 16px; background: #eaf1fe; color: #174ea6; padding: 5px 10px;
 }
 .nct-toolbar button:disabled { cursor: wait; opacity: .6; }
-.nct-toolbar[hidden] { display: none; }
+.nct-toolbar[hidden], .nct-toolbar [hidden] { display: none; }
+.nct-progress { width: 120px; height: 8px; }
+.nct-auto { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; cursor: pointer; }
+.nct-auto input:focus-visible { outline: 2px solid #1967d2; outline-offset: 2px; }
 .nct-tags {
   position: relative; z-index: 2; display: flex; flex-wrap: wrap; gap: 5px;
   margin-top: 9px; font: 12px/1.4 system-ui, sans-serif;
 }
 .nct-tags button { padding: 3px 8px; text-align: left; max-width: 100%; overflow-wrap: anywhere; }
-.nct-tags button.nct-empty { background: #fff7e5; color: #805400; border-color: #ecd6a3; }
+.nct-tags button.nct-empty { background: #fff7e5; color: #5c3b00; border-color: #d9b866; }
 .nct-tags button.nct-unknown { background: transparent; color: #5f6368; border-style: dashed; }
-.nct-tags button:focus-visible, .nct-toolbar button:focus-visible { outline: 2px solid #1967d2; outline-offset: 2px; }
+.nct-tags button:focus-visible, .nct-panel button:focus-visible { outline: 2px solid #1967d2; outline-offset: 2px; }
 mat-card:has(> .nct-tags) { height: auto !important; min-height: 180px; padding-bottom: 14px; }
 td > .nct-tags { margin: 5px 0; }
 .nct-hint { padding: 8px 0; font: 13px/1.4 system-ui, sans-serif; color: #5f6368; }
 @media (prefers-color-scheme: dark) {
-  .nct-toolbar { background: #202124; color: #e8eaed; border-color: #5f6368; }
-  .nct-tags button.nct-unknown, .nct-hint { color: #9aa0a6; }
+  .nct-tags button.nct-unknown, .nct-hint { color: #bdc1c6; }
+  .nct-tags button:focus-visible, .nct-panel button:focus-visible { outline-color: #8ab4f8; }
 }
